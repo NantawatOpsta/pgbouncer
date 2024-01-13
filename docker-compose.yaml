@@ -1,0 +1,63 @@
+version: "3"
+services:
+    postgresql:
+        container_name: postgresql
+        image: docker.io/bitnami/postgresql:16
+        volumes:
+            - "postgresql_data_16_bitnami:/bitnami/postgresql"
+        environment:
+            - POSTGRESQL_DATABASE=django
+            - "ALLOW_EMPTY_PASSWORD=yes"
+
+    pgbouncer:
+        container_name: pgbouncer
+        image: docker.io/bitnami/pgbouncer:latest
+        ports:
+            - 6432:6432
+        environment:
+            - POSTGRESQL_HOST=postgresql
+            - PGBOUNCER_AUTH_TYPE=trust
+    django:
+        container_name: django
+        build:
+            context: django
+            dockerfile: Dockerfile
+        command: python manage.py runserver 0.0.0.0:8000
+        user: 1000:1000
+        volumes:
+            - ./django/source:/code
+        ports:
+            - "8000:8000"
+        environment:
+            - POSTGRES_NAME=postgres
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+        depends_on:
+            - postgresql
+
+    master-locust:
+        container_name: master-locust
+        image: locustio/locust
+        ports:
+            - "8089:8089"
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --master -H http://django:8000/api/blog/
+
+    worker-locust-00:
+        container_name: worker-locust-00
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+
+    worker-locust-1:
+        container_name: worker-locust-1
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+
+volumes:
+    postgresql_data_16_bitnami:
+        driver: local

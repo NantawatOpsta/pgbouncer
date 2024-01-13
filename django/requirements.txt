@@ -1,0 +1,6 @@
+Django
+psycopg2
+gunicorn
+djangorestframework
+markdown       # Markdown support for the browsable API.
+django-filter
