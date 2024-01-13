@@ -3,26 +3,41 @@ services:
     postgresql:
         container_name: postgresql
         image: docker.io/bitnami/postgresql:16
+        ports:
+            - "5432:5432"
         volumes:
             - "postgresql_data_16_bitnami:/bitnami/postgresql"
         environment:
             - POSTGRESQL_DATABASE=django
             - "ALLOW_EMPTY_PASSWORD=yes"
-
+            - POSTGRES_SHARED_BUFFERS=256MB
+            - POSTGRES_WORK_MEM=64MB
+            - POSTGRES_EFFECTIVE_CACHE_SIZE=768MB
+            - POSTGRES_MAINTENANCE_WORK_MEM=128MB
     pgbouncer:
         container_name: pgbouncer
-        image: docker.io/bitnami/pgbouncer:latest
+        image: docker.io/bitnami/pgbouncer:1
         ports:
             - 6432:6432
         environment:
-            - POSTGRESQL_HOST=postgresql
+            - PGBOUNCER_DATABASE="*"
             - PGBOUNCER_AUTH_TYPE=trust
+            - POSTGRESQL_HOST=postgresql
+            - POSTGRESQL_USERNAME=postgres
+            - POSTGRESQL_DATABASE=django
+            - PGBOUNCER_MAX_DB_CONNECTIONS=1
+            # - PGBOUNCER_MAX_CLIENT_CONN=1000000
+            # - PGBOUNCER_QUERY_WAIT_TIMEOUT=60
+            # - PGBOUNCER_DEFAULT_POOL_SIZE=1000000
+            # - PGBOUNCER_MIN_POOL_SIZE=100
+            # - PGBOUNCER_RESERVE_POOL_SIZE=1000
+            # - PGBOUNCER_RESERVE_POOL_TIMEOUT=10
     django:
         container_name: django
         build:
             context: django
             dockerfile: Dockerfile
-        command: python manage.py runserver 0.0.0.0:8000
+        command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 5 --threads 4
         user: 1000:1000
         volumes:
             - ./django/source:/code
@@ -34,6 +49,7 @@ services:
             - POSTGRES_PASSWORD=postgres
         depends_on:
             - postgresql
+            - pgbouncer
 
     master-locust:
         container_name: master-locust
@@ -42,10 +58,10 @@ services:
             - "8089:8089"
         volumes:
             - ./locust/source:/mnt/locust
-        command: -f /mnt/locust/locustfile.py --master -H http://django:8000/api/blog/
+        command: -f /mnt/locust/locustfile.py --master -H http://django:8000/api/blog/ -u 600 -r 100
 
     worker-locust-00:
-        container_name: worker-locust-00
+        container_name: worker-locust-0
         image: locustio/locust
         volumes:
             - ./locust/source:/mnt/locust
@@ -53,6 +69,27 @@ services:
 
     worker-locust-1:
         container_name: worker-locust-1
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+
+    worker-locust-2:
+        container_name: worker-locust-2
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+
+    worker-locust-3:
+        container_name: worker-locust-3
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+
+    worker-locust-4:
+        container_name: worker-locust-4
         image: locustio/locust
         volumes:
             - ./locust/source:/mnt/locust
