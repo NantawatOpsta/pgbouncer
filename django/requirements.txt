@@ -1,5 +1,6 @@
 Django
-psycopg[binary]
+# psycopg[binary]
+psycopg2-binary
 gunicorn
 djangorestframework
 markdown       # Markdown support for the browsable API.
