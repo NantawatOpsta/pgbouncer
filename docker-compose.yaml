@@ -11,7 +11,7 @@ services:
         environment:
             - POSTGRESQL_DATABASE=django
             - "ALLOW_EMPTY_PASSWORD=yes"
-    
+
     pgbouncer:
         container_name: pgbouncer
         image: docker.io/bitnami/pgbouncer:1.20.1
@@ -25,7 +25,7 @@ services:
             - POSTGRESQL_HOST=postgresql
             - POSTGRESQL_USERNAME=postgres
             - POSTGRESQL_DATABASE=django
-    
+
     nginx:
         container_name: nginx
         build:
@@ -35,6 +35,45 @@ services:
             - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
         ports:
             - "80:80"
+
+    # dashboard:
+    #     container_name: dashboard
+    #     image: "apache/apisix-dashboard"
+    #     volumes:
+    #         - ./apisix/dashboard.yaml:/usr/local/apisix/conf/config.yaml:ro
+    #     ports:
+    #         - "9000:9000/tcp"
+    #     depends_on:
+    #         - etcd
+    
+    apisix:
+        container_name: apisix
+        image: apache/apisix:3.8.0-debian
+        volumes:
+            - ./apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+        depends_on:
+            - etcd
+        ports:
+            - "9180:9180/tcp"
+            - "9080:9080/tcp"
+            - "9091:9091/tcp"
+            - "9443:9443/tcp"
+            - "9092:9092/tcp"
+
+    etcd:
+        image: bitnami/etcd:3.4.14
+        user: root
+        restart: always
+        volumes:
+            - ../example/etcd_data:/etcd_data
+        environment:
+            ETCD_DATA_DIR: /etcd_data
+            ETCD_ENABLE_V2: "true"
+            ALLOW_NONE_AUTHENTICATION: "yes"
+            ETCD_ADVERTISE_CLIENT_URLS: "http://etcd:2379"
+            ETCD_LISTEN_CLIENT_URLS: "http://0.0.0.0:2379"
+        ports:
+            - "2379:2379/tcp"
 
     django-00:
         container_name: django-00
@@ -54,7 +93,7 @@ services:
         depends_on:
             - postgresql
             - pgbouncer
-    
+
     django-01:
         container_name: django-01
         build:
@@ -81,7 +120,7 @@ services:
             - "8089:8089"
         volumes:
             - ./locust/source:/mnt/locust
-        command: -f /mnt/locust/locustfile.py --master -H http://nginx/api/blog -u 1000 -r 100
+        command: -f /mnt/locust/locustfile.py --master -H http://apisix:9080/api/blog/ -u 1000 -r 100
         # command: -f /mnt/locust/locustfile.py --master -H http://django-01:8000/api/blog/ -u 1000 -r 100
 
     worker-locust-00:
@@ -111,7 +150,7 @@ services:
         volumes:
             - ./locust/source:/mnt/locust
         command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
-    
+
     worker-locust-4:
         container_name: worker-locust-4
         image: locustio/locust
@@ -121,4 +160,6 @@ services:
 
 volumes:
     postgresql_data_16_bitnami:
+        driver: local
+    etcd_data:
         driver: local
