@@ -84,6 +84,7 @@ WSGI_APPLICATION = 'myapp.wsgi.application'
 #         "PASSWORD": "",
 #         "HOST": "postgresql",
 #         "PORT": "5432",
+#         "CONN_MAX_AGE": 120,
 #     }
 # }
 
@@ -95,7 +96,7 @@ DATABASES = {
         "PASSWORD": "",
         "HOST": "pgbouncer",
         "PORT": "6432",
-        "CONN_MAX_AGE": 60,
+        "CONN_MAX_AGE": 120,
     }
 }
 
