@@ -19,7 +19,8 @@ curl -i "http://127.0.0.1:9180/apisix/admin/routes?api_key=edd1c9f034335f136f87a
     "type": "roundrobin",
     "nodes": {
       "django-00:8000": 1,
-      "django-01:8000": 1
+      "django-01:8000": 1,
+      "django-02:8000": 1
     },
     "pass_host": "node",
     "scheme": "http"

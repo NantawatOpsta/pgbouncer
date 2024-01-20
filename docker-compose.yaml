@@ -113,6 +113,25 @@ services:
             - postgresql
             - pgbouncer
 
+    django-02:
+        container_name: django-02
+        build:
+            context: django
+            dockerfile: Dockerfile
+        command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 2
+        user: 1000:1000
+        volumes:
+            - ./django/source:/code
+        ports:
+            - "8002:8000"
+        environment:
+            - POSTGRES_NAME=postgres
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+        depends_on:
+            - postgresql
+            - pgbouncer
+
     master-locust:
         container_name: master-locust
         image: locustio/locust
@@ -137,33 +156,33 @@ services:
             - ./locust/source:/mnt/locust
         command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 
-    worker-locust-2:
-        container_name: worker-locust-2
-        image: locustio/locust
-        volumes:
-            - ./locust/source:/mnt/locust
-        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+    # worker-locust-2:
+    #     container_name: worker-locust-2
+    #     image: locustio/locust
+    #     volumes:
+    #         - ./locust/source:/mnt/locust
+    #     command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 
-    worker-locust-3:
-        container_name: worker-locust-3
-        image: locustio/locust
-        volumes:
-            - ./locust/source:/mnt/locust
-        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+    # worker-locust-3:
+    #     container_name: worker-locust-3
+    #     image: locustio/locust
+    #     volumes:
+    #         - ./locust/source:/mnt/locust
+    #     command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 
-    worker-locust-4:
-        container_name: worker-locust-4
-        image: locustio/locust
-        volumes:
-            - ./locust/source:/mnt/locust
-        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+    # worker-locust-4:
+    #     container_name: worker-locust-4
+    #     image: locustio/locust
+    #     volumes:
+    #         - ./locust/source:/mnt/locust
+    #     command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 
-    worker-locust-5:
-        container_name: worker-locust-5
-        image: locustio/locust
-        volumes:
-            - ./locust/source:/mnt/locust
-        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+    # worker-locust-5:
+    #     container_name: worker-locust-5
+    #     image: locustio/locust
+    #     volumes:
+    #         - ./locust/source:/mnt/locust
+    #     command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 
 volumes:
     postgresql_data_16_bitnami:
