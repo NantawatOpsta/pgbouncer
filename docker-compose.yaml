@@ -26,15 +26,15 @@ services:
             - POSTGRESQL_USERNAME=postgres
             - POSTGRESQL_DATABASE=django
 
-    nginx:
-        container_name: nginx
-        build:
-            context: nginx
-            dockerfile: Dockerfile
-        volumes:
-            - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-        ports:
-            - "80:80"
+    # nginx:
+    #     container_name: nginx
+    #     build:
+    #         context: nginx
+    #         dockerfile: Dockerfile
+    #     volumes:
+    #         - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    #     ports:
+    #         - "80:80"
 
     # dashboard:
     #     container_name: dashboard
@@ -80,7 +80,7 @@ services:
         build:
             context: django
             dockerfile: Dockerfile
-        command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 2
+        command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 24 --worker-class gthread
         user: 1000:1000
         volumes:
             - ./django/source:/code
@@ -99,7 +99,7 @@ services:
         build:
             context: django
             dockerfile: Dockerfile
-        command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 2
+        command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 24 --worker-class gthread
         user: 1000:1000
         volumes:
             - ./django/source:/code
@@ -118,7 +118,7 @@ services:
         build:
             context: django
             dockerfile: Dockerfile
-        command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 2
+        command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 24 --worker-class gthread
         user: 1000:1000
         volumes:
             - ./django/source:/code
@@ -131,7 +131,7 @@ services:
         depends_on:
             - postgresql
             - pgbouncer
-
+            
     master-locust:
         container_name: master-locust
         image: locustio/locust
@@ -139,7 +139,7 @@ services:
             - "8089:8089"
         volumes:
             - ./locust/source:/mnt/locust
-        command: -f /mnt/locust/locustfile.py --master -H http://apisix:9080/api/blog/ -u 200 -r 100
+        command: -f /mnt/locust/locustfile.py --master -H http://apisix:9080/api/blog/ -u 2400 -r 100
         # command: -f /mnt/locust/locustfile.py --master -H http://django-01:8000/api/blog/ -u 1000 -r 100
 
     worker-locust-00:
@@ -156,26 +156,26 @@ services:
             - ./locust/source:/mnt/locust
         command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 
-    # worker-locust-2:
-    #     container_name: worker-locust-2
-    #     image: locustio/locust
-    #     volumes:
-    #         - ./locust/source:/mnt/locust
-    #     command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+    worker-locust-2:
+        container_name: worker-locust-2
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 
-    # worker-locust-3:
-    #     container_name: worker-locust-3
-    #     image: locustio/locust
-    #     volumes:
-    #         - ./locust/source:/mnt/locust
-    #     command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+    worker-locust-3:
+        container_name: worker-locust-3
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 
-    # worker-locust-4:
-    #     container_name: worker-locust-4
-    #     image: locustio/locust
-    #     volumes:
-    #         - ./locust/source:/mnt/locust
-    #     command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+    worker-locust-4:
+        container_name: worker-locust-4
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 
     # worker-locust-5:
     #     container_name: worker-locust-5
