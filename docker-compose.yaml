@@ -75,17 +75,15 @@ services:
         ports:
             - "2379:2379/tcp"
 
-    django-00:
-        container_name: django-00
-        build:
-            context: django
-            dockerfile: Dockerfile
-        command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 24 --worker-class gthread
+    fiber-00:
+        container_name: fiber-00
         user: 1000:1000
-        volumes:
-            - ./django/source:/code
+        build:
+            context: fiber
+            dockerfile: Dockerfile
+        
         ports:
-            - "8000:8000"
+            - "8100:8000"
         environment:
             - POSTGRES_NAME=postgres
             - POSTGRES_USER=postgres
@@ -93,18 +91,17 @@ services:
         depends_on:
             - postgresql
             - pgbouncer
+        # volumes:
+        #     - ./fiber/source:/app
+        # command: air
+        command: ./fiber
 
-    django-01:
-        container_name: django-01
-        build:
-            context: django
-            dockerfile: Dockerfile
-        command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 24 --worker-class gthread
+    fiber-01:
+        container_name: fiber-01
         user: 1000:1000
-        volumes:
-            - ./django/source:/code
-        ports:
-            - "8001:8000"
+        build:
+            context: fiber
+            dockerfile: Dockerfile
         environment:
             - POSTGRES_NAME=postgres
             - POSTGRES_USER=postgres
@@ -112,25 +109,63 @@ services:
         depends_on:
             - postgresql
             - pgbouncer
+        # volumes:
+        #     - ./fiber/source:/app
+        # command: air
+        command: ./fiber
 
-    django-02:
-        container_name: django-02
-        build:
-            context: django
-            dockerfile: Dockerfile
-        command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 24 --worker-class gthread
-        user: 1000:1000
-        volumes:
-            - ./django/source:/code
-        ports:
-            - "8002:8000"
-        environment:
-            - POSTGRES_NAME=postgres
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
-        depends_on:
-            - postgresql
-            - pgbouncer
+    # fiber-01:
+    #     container_name: fiber-01
+    #     user: 1000:1000
+    #     build:
+    #         context: fiber
+    #         dockerfile: Dockerfile
+    #     environment:
+    #         - POSTGRES_NAME=postgres
+    #         - POSTGRES_USER=postgres
+    #         - POSTGRES_PASSWORD=postgres
+    #     depends_on:
+    #         - postgresql
+    #         - pgbouncer
+    #     command: ./fiber
+
+    # django-00:
+    #     container_name: django-00
+    #     build:
+    #         context: django
+    #         dockerfile: Dockerfile
+    #     command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 24 --worker-class gthread
+    #     user: 1000:1000
+    #     volumes:
+    #         - ./django/source:/code
+    #     ports:
+    #         - "8000:8000"
+    #     environment:
+    #         - POSTGRES_NAME=postgres
+    #         - POSTGRES_USER=postgres
+    #         - POSTGRES_PASSWORD=postgres
+    #     depends_on:
+    #         - postgresql
+    #         - pgbouncer
+
+    # django-01:
+    #     container_name: django-01
+    #     build:
+    #         context: django
+    #         dockerfile: Dockerfile
+    #     command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000 --workers 24 --worker-class gthread
+    #     user: 1000:1000
+    #     volumes:
+    #         - ./django/source:/code
+    #     ports:
+    #         - "8001:8000"
+    #     environment:
+    #         - POSTGRES_NAME=postgres
+    #         - POSTGRES_USER=postgres
+    #         - POSTGRES_PASSWORD=postgres
+    #     depends_on:
+    #         - postgresql
+    #         - pgbouncer
             
     master-locust:
         container_name: master-locust
@@ -139,7 +174,7 @@ services:
             - "8089:8089"
         volumes:
             - ./locust/source:/mnt/locust
-        command: -f /mnt/locust/locustfile.py --master -H http://apisix:9080/api/blog/ -u 2400 -r 100
+        command: -f /mnt/locust/locustfile.py --master -H http://apisix:9080/api/blogs -u 2400 -r 100
         # command: -f /mnt/locust/locustfile.py --master -H http://django-01:8000/api/blog/ -u 1000 -r 100
 
     worker-locust-00:
@@ -177,13 +212,40 @@ services:
             - ./locust/source:/mnt/locust
         command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 
-    # worker-locust-5:
-    #     container_name: worker-locust-5
-    #     image: locustio/locust
-    #     volumes:
-    #         - ./locust/source:/mnt/locust
-    #     command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+    worker-locust-5:
+        container_name: worker-locust-5
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 
+    worker-locust-6:
+        container_name: worker-locust-6
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+
+    worker-locust-7:
+        container_name: worker-locust-7
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+
+    worker-locust-8:
+        container_name: worker-locust-8
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
+
+    worker-locust-9:
+        container_name: worker-locust-9
+        image: locustio/locust
+        volumes:
+            - ./locust/source:/mnt/locust
+        command: -f /mnt/locust/locustfile.py --worker --master-host master-locust
 volumes:
     postgresql_data_16_bitnami:
         driver: local

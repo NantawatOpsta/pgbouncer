@@ -96,7 +96,7 @@ DATABASES = {
         "PASSWORD": "",
         "HOST": "pgbouncer",
         "PORT": "6432",
-        "CONN_MAX_AGE": 120,
+        "CONN_MAX_AGE": 60,
     }
 }
 
